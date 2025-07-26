@@ -1,0 +1,11 @@
+pymupdf
+python-docx
+pypandoc
+tqdm
+langchain
+langchain-google-genai
+scikit-learn
+numpy
+python-dotenv 
+faiss-cpu
+langchain-core
