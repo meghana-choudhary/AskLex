@@ -10,6 +10,7 @@ from typing import Dict
 from app.services.text_processing import *
 from app.services.chat import *
 
+
 app = FastAPI()
 
 # CORS for AJAX
@@ -69,9 +70,9 @@ async def upload_file(request: Request, file: UploadFile = File(...), background
 
 @app.get("/progress/{task_id}/{phase}")
 async def get_progress(task_id: str, phase: str):
-    if task_id not in progress_store or phase not in progress_store[task_id]:
-        raise HTTPException(status_code=404, detail="Task or phase not found")
-    return {"progress": progress_store[task_id][phase]}
+    return {
+        "progress": progress_store.get(task_id, {}).get(phase, 0)
+    }
 
 @app.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request, task_id: str):
@@ -98,19 +99,17 @@ async def query_pdf(task_id: str, request: Request):
 
     return {"response": response.content}
 
+
 def process_document(task_id: str, file_path: str):
-    # Step 1: Extract text
-    text = extract_text(file_path)
-    progress_store[task_id]["text_extraction"] = 100  # ✅ update progress
+    def callback(phase, progress):
+        progress_store[task_id][phase] = progress
 
-    # Step 2: Chunk text
-    chunks = get_chunks(text)
-    progress_store[task_id]["chunk_creation"] = 100  # ✅ update progress
+    text = extract_text(file_path, progress_callback=callback)
+    chunks = get_chunks(text, task_id, progress_callback=callback)
+    
+    # ✅ Call service layer with callback
+    faiss_index = get_faiss_index(chunks, progress_callback=callback)
 
-    # Step 3: Generate FAISS index
-    faiss_index = get_faiss_index(chunks)
-    progress_store[task_id]["embedding_generation"] = 100  # ✅ update progress
-
-    # Store results
     data_store[task_id]["chunks"] = chunks
     data_store[task_id]["faiss_index"] = faiss_index
+

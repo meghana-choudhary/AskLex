@@ -21,48 +21,75 @@ from app.utils.embedding_generation import (
     build_faiss_index
 )
 
-def extract_text(file_path):
+
+def extract_text(file_path, progress_callback=None):
     ext = os.path.splitext(file_path)[1].lower()
 
-    if ext == ".pdf":
-        text= _extract_pdf_text(file_path)
-    elif ext == ".docx":
-        text= _extract_docx_text(file_path)
-    elif ext == ".doc":
-        text= _extract_doc_text(file_path)
-    elif ext == ".txt":
-        text= _extract_txt_text(file_path)
-    elif ext == ".md":
-        text= _extract_md_text(file_path)
-    elif ext == ".odt":
-        text= _extract_odt_text(file_path)
-    elif ext == ".rtf":
-        text= _extract_rtf_text(file_path)
-    elif ext == ".html":
-        text= _extract_html_text(file_path)
-    elif ext == ".epub":
-        text= _extract_epub_text(file_path)
-    else:
+    extractors = {
+        ".pdf": _extract_pdf_text,
+        ".docx": _extract_docx_text,
+        ".doc": _extract_doc_text,
+        ".txt": _extract_txt_text,
+        ".md": _extract_md_text,
+        ".odt": _extract_odt_text,
+        ".rtf": _extract_rtf_text,
+        ".html": _extract_html_text,
+        ".epub": _extract_epub_text,
+    }
+
+    if ext not in extractors:
         raise ValueError(f"Unsupported file extension: {ext}")
-    
+
+    text = extractors[ext](file_path, progress_callback)  # ✅ pass callback
+
     full_text = "\n\n".join([
-    f"Page {page['page_number']}:\n{page['text']}"
-    for page in text
-])
+        f"Page {page['page_number']}:\n{page['text']}"
+        for page in text
+    ])
+
+    if progress_callback:
+        progress_callback("text_extraction", 100)  # ensure it's marked complete
+
     return full_text
 
-def get_chunks(full_text):
-    ordered_chunks= recursive_chunk_creation(full_text)
-    chunks_with_summary= generate_chunk_descriptions_batched(ordered_chunks)
-    embedded_summary_chunks= generate_embeddings(chunks_with_summary)
-    stitched_chunks= chunks_stitching(embedded_summary_chunks)
+
+
+def get_chunks(full_text, task_id: str = None, progress_callback=None):
+    total_steps = 4  # We have 4 main stages
+    current_step = 0
+
+    # Step 1: Chunking
+    ordered_chunks = recursive_chunk_creation(full_text)
+    current_step += 1
+    if progress_callback:
+        progress_callback("chunk_creation", int((current_step / total_steps) * 100))
+
+    # Step 2: Summarization
+    chunks_with_summary = generate_chunk_descriptions_batched(ordered_chunks)
+    current_step += 1
+    if progress_callback:
+        progress_callback("chunk_creation", int((current_step / total_steps) * 100))
+
+    # Step 3: Embedding summaries
+    embedded_summary_chunks = generate_embeddings(chunks_with_summary)
+    current_step += 1
+    if progress_callback:
+        progress_callback("chunk_creation", int((current_step / total_steps) * 100))
+
+    # Step 4: Stitching
+    stitched_chunks = chunks_stitching(embedded_summary_chunks)
+    current_step += 1
+    if progress_callback:
+        progress_callback("chunk_creation", int((current_step / total_steps) * 100))
 
     return stitched_chunks
 
-def get_faiss_index(stitched_chunks):
-    faiss_index = build_faiss_index(stitched_chunks)
 
-    return faiss_index
+def get_faiss_index(stitched_chunks, progress_callback=None):
+    return build_faiss_index(stitched_chunks, progress_callback=progress_callback)
+
+
+
 
 
 
