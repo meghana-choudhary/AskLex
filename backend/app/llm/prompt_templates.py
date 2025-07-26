@@ -29,6 +29,67 @@ Text to analyze:
 """
     )
 
+agg_query_prompt= PromptTemplate(
+        input_variables=["previous_questions", "current_question"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+        template="""
+        You are given a list of previously asked questions and a recently asked question. Your task is to analyze and combine all questions into a single, concise, and coherent question that captures the full intent and context provided across them.
+
+        The final question should preserve the core meaning of each input question.
+
+        Use pronoun resolution to replace ambiguous references like "this", "that" or "it" with the correct noun.
+
+        Assume all questions are about the same underlying subject unless otherwise stated.
+
+        Return the aggregated question in a JSON format with the key "aggregated_question". Do not give extra information.
+
+        If the the recently asked question is of different subject then, return the recently asked question as it is in the "aggregated_question".
+
+        Please follow instructions and give response in exact format without extra commentry.
+        Format:
+
+        {{
+            "aggregated_question": "The aggregated question"
+        }}
+
+        Example Inputs:
+
+        **Previously Asked Questions**
+        1. What are the charges under this section?
+
+        **Recently Asked Question**
+        Explain the second one.
+
+        **Output**:
+        {{
+            "aggregated_question": "Explain the second among charges under this section?"
+        }}
+
+
+        **Previously Asked Questions**
+        1.What crime is described in section 1.5?
+        2.What is its punishment?
+
+        **Recently Asked Question**
+        How long did he serve that punishment?
+
+        **Output**:
+        {{
+            "aggregated_question": "How long he served the punishment for crime described in section 1.5?"
+        }}
+
+        {format_instructions}
+
+        **Previously Asked Questions**
+        {previous_questions}
+
+        **Recently Asked Question**
+        {current_question}
+
+        **Final Answer**
+        """
+    )
+
 chat_prompt = PromptTemplate(
         input_variables=["chunk_text", "query"],
         template="""

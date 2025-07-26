@@ -100,6 +100,10 @@ async def chat_page(request: Request, task_id: str):
 async def query_pdf(task_id: str, request: Request):
     body = await request.json()
     query = body.get("query")
+    history= body.get("history")
+    print(history)
+    formatted_history = "\n".join([f"{i+1}. {query}" for i, query in enumerate(history or [])])
+    print(formatted_history)
 
     if task_id not in data_store:
         raise HTTPException(status_code=404, detail="Invalid task ID")
@@ -109,9 +113,10 @@ async def query_pdf(task_id: str, request: Request):
 
     if not faiss_index or not chunks:
         raise HTTPException(status_code=400, detail="Data not processed yet")
-
-    similar_chunks = get_similar_chunks(faiss_index, query)
-    response = get_llm_response(similar_chunks, query)
+    
+    structured_query= get_aggregated_query(formatted_history, query)
+    similar_chunks = get_similar_chunks(faiss_index, structured_query)
+    response = get_llm_response(similar_chunks, structured_query)
 
     return {"response": response.content}
 

@@ -101,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- CHAT PAGE LOGIC ---
+  let queryHistory = [];
   const chatForm = document.getElementById("chat-form");
   if (chatForm) {
     const userInput = document.getElementById("user-input");
@@ -112,10 +113,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (userMessage === "") return;
 
       appendUserMessage(userMessage);
-      userInput.value = "";
+      const historyToSend = [...queryHistory];
+        queryHistory.push(userMessage);
+  if (queryHistory.length > 5) queryHistory.shift();
+
+    userInput.value = "";
 
       setTimeout(() => {
-        fetchAIResponse(userMessage);
+        fetchAIResponse(userMessage, historyToSend);
       }, 1000);
     });
 
@@ -154,7 +159,7 @@ function appendAIMessage(message) {
   chatBox.innerHTML += messageHTML;
   chatBox.scrollTop = chatBox.scrollHeight;
 }
-function fetchAIResponse(userMessage) {
+function fetchAIResponse(userMessage, history) {
   // Append a placeholder for the spinner
   const spinnerId = `spinner-${Date.now()}`;
   const spinnerHTML = `
@@ -181,7 +186,7 @@ function fetchAIResponse(userMessage) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query: userMessage }),
+    body: JSON.stringify({ query: userMessage, history }),
   })
     .then((response) => response.json())
     .then((data) => {

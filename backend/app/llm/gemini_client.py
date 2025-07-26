@@ -1,6 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import JsonOutputParser
-from app.llm.prompt_templates import chunk_summary_prompt, chat_prompt
+from app.llm.prompt_templates import chunk_summary_prompt, chat_prompt, agg_query_prompt
 from app import config
 
 llm = ChatGoogleGenerativeAI(
@@ -12,6 +12,11 @@ llm = ChatGoogleGenerativeAI(
 def get_summary_chain():
     parser = JsonOutputParser()
     return chunk_summary_prompt | llm | parser
+
+def get_agg_query_chain():
+    parser = JsonOutputParser()
+    return agg_query_prompt | llm | parser
+
 
 def get_chat_chain():
     return chat_prompt | llm
