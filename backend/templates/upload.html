@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex flex-col items-center justify-center h-screen p-4">
+
+    <div class="bg-gray-800 text-white p-8 md:p-12 rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+        <div id="upload-box">
+            <h2 class="text-3xl font-bold text-center mb-2">Upload Your Document</h2>
+            <p class="text-center text-gray-400 mb-8">Upload a PDF file to begin analysis.</p>
+            <div class="border-2 border-dashed border-gray-600 p-8 rounded-lg text-center">
+                <input type="file" id="file-upload" class="hidden">
+                <label for="file-upload" class="cursor-pointer bg-purple-600 text-white font-bold py-3 px-6 rounded-full hover:bg-purple-700 transition-all duration-300">
+                    Choose File
+                </label>
+                <p id="file-name" class="mt-4 text-gray-400">No file selected.</p>
+            </div>
+        </div>
+
+        <div id="progress-section" class="hidden">
+            <h2 class="text-3xl font-bold text-center mb-8">Processing Document...</h2>
+            
+            <!-- Progress Bar 1: Text Extraction -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-lg font-medium text-purple-400">Text Extraction</span>
+                    <span id="progress-text-1" class="text-sm font-medium text-gray-300">0%</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar-1" class="bg-purple-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Progress Bar 2: Chunk Creation -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-lg font-medium text-gray-500">Chunk Creation</span>
+                    <span id="progress-text-2" class="text-sm font-medium text-gray-500">0%</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar-2" class="bg-teal-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Progress Bar 3: Embedding Generation -->
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-lg font-medium text-gray-500">Embedding Generation</span>
+                    <span id="progress-text-3" class="text-sm font-medium text-gray-500">0%</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar-3" class="bg-pink-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Processing Complete Message -->
+            <div id="complete-section" class="hidden mt-8 text-center">
+                <div class="inline-flex items-center gap-3 text-2xl font-bold text-green-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Processing Complete</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <a href="/" class="mt-8 text-gray-400 hover:text-white transition-colors duration-300">← Back to Home</a>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

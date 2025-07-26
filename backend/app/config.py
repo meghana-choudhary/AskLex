@@ -9,7 +9,7 @@ load_dotenv()
 # API and Model Configurations
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 EMBEDDING_MODEL_NAME = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07")
-LLM_MODEL_NAME = "gemini-1.5-flash"
+LLM_MODEL_NAME = "gemini-2.5-flash-lite"
 
 # Text Processing Configurations
 CHUNK_SIZE = 1000

@@ -9,3 +9,5 @@ numpy
 python-dotenv 
 faiss-cpu
 langchain-core
+fastapi
+uvicorn

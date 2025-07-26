@@ -1,3 +1,9 @@
 trial/
 documents/
 .env
+**/__pycache__/
+changes.txt
+temp/
+
+
+
