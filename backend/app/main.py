@@ -47,10 +47,26 @@ async def upload_file(request: Request, file: UploadFile = File(...), background
     print("Generated Task ID:", task_id)
 
     current_task_id = task_id
+    temp_folder = "temp"
+
+    # Step 2: Ensure temp folder exists and is clean
+    if os.path.exists(temp_folder):
+        # Clear all files inside the folder
+        for filename in os.listdir(temp_folder):
+            file_path = os.path.join(temp_folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)  # Delete file or link
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)  # Delete folder
+            except Exception as e:
+                print(f"⚠️ Failed to delete {file_path}. Reason: {e}")
+    else:
+        os.makedirs(temp_folder)
     filename = f"temp_{task_id}{os.path.splitext(file.filename)[1]}"
     temp_path = os.path.join("temp", filename)
 
-    os.makedirs("temp", exist_ok=True)
+    # os.makedirs("temp", exist_ok=True)
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 

@@ -34,6 +34,9 @@ chat_prompt = PromptTemplate(
         template="""
 You are a legal assistant. Based on the following legal content, answer the question clearly and concisely.
 
+However, if someone greets with "Hi" or "Hello" greet them back or if someone asks some general question about you, then answer without relying on the chunks.
+But if the question is out of context of legal scenarios, then respond with: 'I'm designed to assist with legal document-related queries. Please ask something relevant to the uploaded legal document.
+
 Text to analyze:
 \"\"\"
 {chunk_text}

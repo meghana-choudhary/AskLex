@@ -137,40 +137,86 @@ document.addEventListener("DOMContentLoaded", () => {
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function appendAIMessage(message) {
-      const messageHTML = `
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-            </svg>
-          </div>
-          <div class="bg-gray-800 p-4 rounded-r-lg rounded-bl-lg">
-            <p class="text-white">${message}</p>
-          </div>
+function appendAIMessage(message) {
+  const messageHTML = `
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+        </svg>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-r-lg rounded-bl-lg max-w-[80%] overflow-auto">
+        <div class="text-white prose prose-invert">${marked.parse(message)}</div>
+      </div>
+    </div>
+  `;
+  chatBox.innerHTML += messageHTML;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+function fetchAIResponse(userMessage) {
+  // Append a placeholder for the spinner
+  const spinnerId = `spinner-${Date.now()}`;
+  const spinnerHTML = `
+    <div id="${spinnerId}" class="flex items-start gap-3 ai-message">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+        </svg>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-r-lg rounded-bl-lg max-w-[80%] overflow-auto">
+        <div class="text-white flex items-center gap-2">
+          <div class="w-5 h-5 border-2 border-t-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>Thinking...</span>
         </div>
-      `;
-      chatBox.innerHTML += messageHTML;
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+      </div>
+    </div>
+  `;
+  chatBox.innerHTML += spinnerHTML;
+  chatBox.scrollTop = chatBox.scrollHeight;
 
-    function fetchAIResponse(userMessage) {
-      fetch(`/query/${taskId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: userMessage }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          appendAIMessage(data.response);
-        })
-        .catch((error) => {
-          console.error("Error fetching AI response:", error);
-          appendAIMessage("Sorry, something went wrong while fetching the response.");
-        });
-    }
+  fetch(`/query/${taskId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: userMessage }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      // Replace spinner with real AI message
+      const spinnerElement = document.getElementById(spinnerId);
+      if (spinnerElement) {
+        spinnerElement.outerHTML = generateAIMessageHTML(data.response);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching AI response:", error);
+      const spinnerElement = document.getElementById(spinnerId);
+      if (spinnerElement) {
+        spinnerElement.outerHTML = generateAIMessageHTML("**Sorry**, something went wrong.");
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    });
+}
+function generateAIMessageHTML(message) {
+  return `
+    <div class="flex items-start gap-3 ai-message">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+        </svg>
+      </div>
+      <div class="bg-gray-800 p-4 rounded-r-lg rounded-bl-lg max-w-[80%] overflow-auto">
+        <div class="text-white prose prose-invert">${marked.parse(message)}</div>
+      </div>
+    </div>
+  `;
+}
+
+
   }
 });
