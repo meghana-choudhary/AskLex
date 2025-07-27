@@ -55,8 +55,7 @@ def _extract_txt_text(file_path, progress_callback=None):
 
 
 def _extract_md_text(file_path, progress_callback=None):
-    return _extract_txt_text(file_path, progress_callback)  # Similar handling
-
+    return _extract_txt_text(file_path, progress_callback)  
 
 def _extract_odt_text(file_path, progress_callback=None):
     output = pypandoc.convert_file(file_path, "plain")
@@ -74,19 +73,19 @@ def _extract_odt_text(file_path, progress_callback=None):
 
 
 def _extract_rtf_text(file_path, progress_callback=None):
-    return _extract_odt_text(file_path, progress_callback)  # Same logic
+    return _extract_odt_text(file_path, progress_callback) 
 
 
 def _extract_html_text(file_path, progress_callback=None):
-    return _extract_odt_text(file_path, progress_callback)  # Same logic
+    return _extract_odt_text(file_path, progress_callback)  
 
 
 def _extract_epub_text(file_path, progress_callback=None):
-    return _extract_odt_text(file_path, progress_callback)  # Same logic
+    return _extract_odt_text(file_path, progress_callback) 
 
 
 def _extract_doc_text(file_path, progress_callback=None):
-    return _extract_odt_text(file_path, progress_callback)  # Same logic
+    return _extract_odt_text(file_path, progress_callback)  
 
 
 if __name__ == "__main__":

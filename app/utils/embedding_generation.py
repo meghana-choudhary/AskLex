@@ -17,11 +17,11 @@ def build_faiss_index(stitched_chunks, progress_callback=None, batch_size=10):
     documents = []
     for chunk in valid_chunks:
         doc = Document(
-            page_content=chunk["description"],  # what will be embedded
+            page_content=chunk["description"],  
             metadata={
                 "start_chunk_id": chunk["start_chunk_id"],
                 "end_chunk_id": chunk["end_chunk_id"],
-                "text": chunk["text"],  # optional, for context
+                "text": chunk["text"],  
             }
         )
         documents.append(doc)
@@ -31,7 +31,6 @@ def build_faiss_index(stitched_chunks, progress_callback=None, batch_size=10):
 
     for i in range(0, total, batch_size):
         batch = documents[i:i+batch_size]
-        # Embedding will be handled inside from_documents, so just track progress manually
         embedded_docs.extend(batch)
 
         if progress_callback:

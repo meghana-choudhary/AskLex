@@ -40,7 +40,7 @@ def extract_text(file_path, progress_callback=None):
     if ext not in extractors:
         raise ValueError(f"Unsupported file extension: {ext}")
 
-    text = extractors[ext](file_path, progress_callback)  # ✅ pass callback
+    text = extractors[ext](file_path, progress_callback)  
 
     full_text = "\n\n".join([
         f"Page {page['page_number']}:\n{page['text']}"
@@ -48,14 +48,14 @@ def extract_text(file_path, progress_callback=None):
     ])
 
     if progress_callback:
-        progress_callback("text_extraction", 100)  # ensure it's marked complete
+        progress_callback("text_extraction", 100)  
 
     return full_text
 
 
 
 def get_chunks(full_text, task_id: str = None, progress_callback=None):
-    total_steps = 4  # We have 4 main stages
+    total_steps = 4 
     current_step = 0
 
     # Step 1: Chunking

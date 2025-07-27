@@ -3,7 +3,6 @@ from tqdm import tqdm
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import os
 from app.llm.gemini_client import get_summary_chain
 from app import config
 
@@ -38,12 +37,13 @@ def generate_chunk_summary_prompt(chunk_text):
     result = chain.invoke({"chunk_text": chunk_text})
     return result
 
-def generate_description_with_backoff(failed_chunks, max_retries=5, base_delay=60, extended_delay=150, max_delay=600):
+def generate_description_with_backoff(failed_chunks, max_retries=5, base_delay=60, extended_delay=150, max_delay=600, max_total_attempts=10):
 
     print("Generating Descriptions with Retry")
     for chunk in failed_chunks:
         retries = 0
-        while True:
+        total_attempts=0
+        while total_attempts < max_total_attempts:
             try:
                 summary = generate_chunk_summary_prompt(chunk["text"])
                 if not isinstance(summary, dict) or "description" not in summary:
@@ -57,6 +57,7 @@ def generate_description_with_backoff(failed_chunks, max_retries=5, base_delay=6
                 break
 
             except Exception as e:
+                total_attempts += 1
                 error_msg = str(e).lower()
                 if "quota" in error_msg or "rate limit" in error_msg or "too many requests" in error_msg or "missing or malformed description" in error_msg or "empty or blank description" in error_msg:
                     retries += 1
@@ -76,9 +77,7 @@ def generate_description_with_backoff(failed_chunks, max_retries=5, base_delay=6
 
 
 def generate_chunk_descriptions_batched(ordered_chunks, batch_size=10, wait_time=65):
-    """
-    Process descriptions in batches of `batch_size` every `wait_time` seconds.
-    """
+
     total_chunks = len(ordered_chunks)
 
     for i in tqdm(range(0, total_chunks, batch_size), desc="Generating Descriptions"):
@@ -110,7 +109,7 @@ def generate_chunk_descriptions_batched(ordered_chunks, batch_size=10, wait_time
 
 
 
-def generate_embeddings(ordered_chunks, max_retries=3, retry_delay=30):
+def generate_embeddings(ordered_chunks, max_retries=3, retry_delay=60):
     valid_chunk_tuples = [(i, c) for i, c in enumerate(ordered_chunks) if c.get("description") and c["description"].strip()]
     descriptions = [c["description"] for _, c in valid_chunk_tuples]
 
@@ -142,11 +141,11 @@ def generate_embeddings(ordered_chunks, max_retries=3, retry_delay=30):
                 print("🚫 Max retries exceeded. Falling back to None embeddings.")
                 embeddings = [None] * len(descriptions)
 
-    # Assign embeddings (even if they are None)
+    # Assigning embeddings (even if they are None)
     for (i, _), emb in zip(valid_chunk_tuples, embeddings):
         ordered_chunks[i]["embedding"] = emb
 
-    # Ensure all chunks have embedding key
+    # Ensuring all chunks have embedding key
     for i, chunk in enumerate(ordered_chunks):
         if "embedding" not in chunk:
             chunk["embedding"] = None

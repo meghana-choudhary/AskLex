@@ -6,10 +6,10 @@ from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from typing import Dict
-from app.services.text_processing import *
 from app.services.chat import *
-
+from app.services.tempfile_manager import *
+from app.services.progress_manager import *
+from app.state import progress_store, data_store, current_task_id
 
 app = FastAPI()
 
@@ -26,10 +26,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# In-memory stores
-progress_store: Dict[str, Dict[str, int]] = {}
-data_store: Dict[str, Dict] = {}
-current_task_id = ""
+temp_folder = "temp"
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -40,29 +38,16 @@ async def upload_page(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
 @app.post("/upload")
-async def upload_file(request: Request, file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def upload_file(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
     global current_task_id
     task_id = str(uuid.uuid4())
 
-    print("Generated Task ID:", task_id)
+    # print("Generated Task ID:", task_id)
 
     current_task_id = task_id
-    temp_folder = "temp"
 
-    # Step 2: Ensure temp folder exists and is clean
-    if os.path.exists(temp_folder):
-        # Clear all files inside the folder
-        for filename in os.listdir(temp_folder):
-            file_path = os.path.join(temp_folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)  # Delete file or link
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)  # Delete folder
-            except Exception as e:
-                print(f"⚠️ Failed to delete {file_path}. Reason: {e}")
-    else:
-        os.makedirs(temp_folder)
+
+    clean_temp_folder(temp_folder)
     filename = f"temp_{task_id}{os.path.splitext(file.filename)[1]}"
     temp_path = os.path.join("temp", filename)
 
@@ -101,9 +86,9 @@ async def query_pdf(task_id: str, request: Request):
     body = await request.json()
     query = body.get("query")
     history= body.get("history")
-    print(history)
+    # print(history)
     formatted_history = "\n".join([f"{i+1}. {query}" for i, query in enumerate(history or [])])
-    print(formatted_history)
+    # print(formatted_history)
 
     if task_id not in data_store:
         raise HTTPException(status_code=404, detail="Invalid task ID")
@@ -121,16 +106,5 @@ async def query_pdf(task_id: str, request: Request):
     return {"response": response.content}
 
 
-def process_document(task_id: str, file_path: str):
-    def callback(phase, progress):
-        progress_store[task_id][phase] = progress
 
-    text = extract_text(file_path, progress_callback=callback)
-    chunks = get_chunks(text, task_id, progress_callback=callback)
-    
-    # ✅ Call service layer with callback
-    faiss_index = get_faiss_index(chunks, progress_callback=callback)
-
-    data_store[task_id]["chunks"] = chunks
-    data_store[task_id]["faiss_index"] = faiss_index
 
